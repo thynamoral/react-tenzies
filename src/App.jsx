@@ -1,12 +1,15 @@
 // packages
-import { useEffect, useState } from 'react';
-import Confetti from 'react-confetti'
-// css files
-import './App.css'
-// components
-import Die from './components/Die'
-// utilities functions
-import { getRandomDie } from './utilities';
+import { useEffect, useRef, useState } from "react";
+import Confetti from "react-confetti";
+// css file
+import "./App.css";
+// component
+import Die from "./components/Die";
+// utilities function
+import { getRandomDie } from "./utilities";
+// sound effects
+import clickButtonSound from "./assets/clickButtonSound.mp3";
+import crowdCheer from "./assets/crowdCheer.mp3";
 
 const allNewDice = () => {
   const diceArray = [];
@@ -14,7 +17,7 @@ const allNewDice = () => {
     diceArray.push(getRandomDie());
   }
   return diceArray;
-}
+};
 
 function App() {
   // states
@@ -24,6 +27,10 @@ function App() {
   const [timeSpent, setTimeSpent] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
 
+  // click button sound
+  const clickSound = useRef(null);
+  const crowdCheeringSound = useRef(null);
+
   // useEffect to check for winning condition
   useEffect(() => {
     const allHeld = dice.every((die) => die.isHeld);
@@ -31,6 +38,7 @@ function App() {
     if (allHeld && allSameValue) {
       setTenzies(true);
       setIsRunning(false);
+      crowdCheeringSound.current.play();
     } else {
       setTenzies(false);
       setIsRunning(true);
@@ -39,15 +47,16 @@ function App() {
 
   // useEffect to track time spent
   useEffect(() => {
-    console.log(isRunning);
     let trackInterval;
-    if (isRunning && !dice.every((die) => !die.isHeld)) {
-      trackInterval = setInterval(() => {
-        setTimeSpent((prevTimeSpent) => prevTimeSpent + 1);
-      }, 1000);
+    if (!dice.every((die) => !die.isHeld) || rollCount > 0) {
+      if (isRunning) {
+        trackInterval = setInterval(() => {
+          setTimeSpent((prevTimeSpent) => prevTimeSpent + 1);
+        }, 1000);
+      }
     }
     return () => clearInterval(trackInterval);
-  }, [isRunning, dice]);
+  }, [isRunning, dice, rollCount]);
 
   const rollDice = () => {
     setDice((oldDice) =>
@@ -76,6 +85,11 @@ function App() {
       dieIndex={index}
     />
   ));
+  const playClickSound = () => {
+    if (clickSound.current) {
+      clickSound.current.play();
+    }
+  };
 
   return (
     <div className="app">
@@ -87,7 +101,13 @@ function App() {
           current value between rolls.
         </p>
         <div className="dice-container">{diceElements}</div>
-        <button className="roll-dice" onClick={tenzies ? newGame : rollDice}>
+        <button
+          className="roll-dice"
+          onClick={() => {
+            playClickSound();
+            tenzies ? newGame() : rollDice();
+          }}
+        >
           {tenzies ? `New Game` : `Roll`}
         </button>
       </main>
@@ -100,6 +120,8 @@ function App() {
           <span className={tenzies ? "won" : ""}>{timeSpent}s</span>
         </p>
       </div>
+      <audio ref={clickSound} src={clickButtonSound}></audio>
+      <audio ref={crowdCheeringSound} src={crowdCheer}></audio>
     </div>
   );
 }
