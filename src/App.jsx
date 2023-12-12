@@ -20,40 +20,54 @@ function App() {
   // states
   const [dice, setDice] = useState(allNewDice());
   const [tenzies, setTenzies] = useState(false);
-  // useEffect
+  const [rollCount, setRollCount] = useState(0);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [isRunning, setIsRunning] = useState(true);
+
+  // useEffect to check for winning condition
   useEffect(() => {
-    const allHeld = dice.every(die => die.isHeld);
-    const allSameValue = dice.every(die => die.value === dice[0].value);
+    const allHeld = dice.every((die) => die.isHeld);
+    const allSameValue = dice.every((die) => die.value === dice[0].value);
     if (allHeld && allSameValue) {
       setTenzies(true);
-      console.log(`You Won!`);
+      setIsRunning(false);
     } else {
       setTenzies(false);
+      setIsRunning(true);
     }
   }, [dice]);
-  
+
+  // useEffect to track time spent
+  useEffect(() => {
+    console.log(isRunning);
+    let trackInterval;
+    if (isRunning && !dice.every((die) => !die.isHeld)) {
+      trackInterval = setInterval(() => {
+        setTimeSpent((prevTimeSpent) => prevTimeSpent + 1);
+      }, 1000);
+    }
+    return () => clearInterval(trackInterval);
+  }, [isRunning, dice]);
+
   const rollDice = () => {
-    setDice(oldDice => (
-      oldDice.map(die => (
-        die.isHeld
-          ? die
-          : getRandomDie()
-      ))
-    ));
-  }
+    setDice((oldDice) =>
+      oldDice.map((die) => (die.isHeld ? die : getRandomDie()))
+    );
+    setRollCount((prevCount) => prevCount + 1);
+  };
   const newGame = () => {
     setDice(allNewDice());
-  }
+    setRollCount(0);
+    setTimeSpent(0);
+  };
   const heldDie = (targetIndex) => {
-    setDice(prevDice => (
+    setDice((prevDice) =>
       prevDice.map((die, index) => {
-        return index === targetIndex
-          ? {...die, isHeld: !die.isHeld}
-          : die
+        return index === targetIndex ? { ...die, isHeld: !die.isHeld } : die;
       })
-    ))
-  }
-  const diceElements = dice.map((die, index) =>
+    );
+  };
+  const diceElements = dice.map((die, index) => (
     <Die
       key={index}
       value={die.value}
@@ -61,26 +75,33 @@ function App() {
       heldDie={heldDie}
       dieIndex={index}
     />
-  );
+  ));
 
   return (
-    <main className="app">
-      {tenzies && <Confetti />}
-      <h1 className='title'>Tenzies</h1>
-      <p className='instruction'>Roll until all dice are the same. Click each die to
-        freeze it at its current value between rolls.
-      </p>
-      <div className="dice-container">
-        {diceElements}
+    <div className="app">
+      <main>
+        {tenzies && <Confetti />}
+        <h1 className="title">Tenzies</h1>
+        <p className="instruction">
+          Roll until all dice are the same. Click each die to freeze it at its
+          current value between rolls.
+        </p>
+        <div className="dice-container">{diceElements}</div>
+        <button className="roll-dice" onClick={tenzies ? newGame : rollDice}>
+          {tenzies ? `New Game` : `Roll`}
+        </button>
+      </main>
+      <div className="summary-stats">
+        <p className="total-roll">
+          Total roll : <span className={tenzies ? "won" : ""}>{rollCount}</span>
+        </p>
+        <p className="time-spent">
+          Time spent :{" "}
+          <span className={tenzies ? "won" : ""}>{timeSpent}s</span>
+        </p>
       </div>
-      <button 
-        className="roll-dice" 
-        onClick={tenzies ? newGame : rollDice}
-      >
-        {tenzies ? `New Game` : `Roll`}
-      </button>
-    </main>
-  )
+    </div>
+  );
 }
 
 export default App

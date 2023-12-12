@@ -12,6 +12,10 @@ body {
     font-family: 'Karla';
     background-color: #0B2434;
 }
+.app {
+    display: flex;
+    flex-direction: column-reverse;
+}
 main {
     width: 340px;
     height: 370px;
@@ -20,6 +24,7 @@ main {
     align-items: center;
     justify-content: center;
     text-align: center;
+    /* position: relative; */
     background-color: #F5F5F5;
     padding: 33px 34px;
     border-radius: 10px;
@@ -72,4 +77,16 @@ main .instruction {
 }
 .isHeld {
     background-color: #59E391;
+}
+.summary-stats {
+    position: relative;
+    top: -10px;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background-color: #F5F5F5;
+    border-radius: 10px;
+}
+.won {
+    color: #59E391;
 }
